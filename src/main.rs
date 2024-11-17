@@ -1,6 +1,9 @@
 
 extern crate argparse;
 
+uss memmap::MmamOptions;
+use std::io::Write;
+use std::fs::File;
 use std::path::Path;
 use std::fs;
 use std::process;
