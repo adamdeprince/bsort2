@@ -1,13 +1,67 @@
 
 extern crate argparse;
 
-uss memmap::MmamOptions;
-use std::io::Write;
-use std::fs::File;
-use std::path::Path;
-use std::fs;
-use std::process;
 use argparse::{ArgumentParser, Store};
+use errno::{Errno, errno, set_errno};
+use memmap::Mmap;
+use memmap::MmapMut;
+use memmap::MmapOptions;
+use std::fs::File;
+use std::fs::OpenOptions;
+use std::fs;
+use std::io::SeekFrom;
+use std::io::Write;
+use std::io::prelude::*;
+use std::io;
+use std::path::Path;
+use std::path::PathBuf;
+use std::process;
+
+pub struct BSort2 {
+    input: Mmap,
+    output: MmapMut,
+    file_length: u64,
+    record_width: u64,
+    index_width: u64
+}
+impl BSort2 {
+    
+    fn new(input_filename: &str, output_filename: &str, input_file_length: u64, record_width: u64, index_width: u64) -> Self {
+	
+	if let Ok(input_file) = File::open(input_filename) {
+	    if let Ok(input) = unsafe {MmapOptions::new().map(&input_file)}
+	    { 
+		let path: PathBuf = PathBuf::from(output_filename);
+		if let Ok(mut output_file) = {OpenOptions::new().read(true).write(true).create(true).open(&path)} {
+		    output_file.seek(SeekFrom::Start(input_file_length - 1));
+		    output_file.write(" ". as_bytes());
+		    if let Ok(mut output) = unsafe {MmapOptions::new().map_mut(&output_file)} {
+			return  Self {input:input, output:output, file_length:input_file_length, record_width:record_width, index_width:index_width}
+		    } else {
+			println!("Unable to mmap output file: {}", output_filename);
+			process::exit(1);
+		    }   
+		} else {
+		    println!("Could not create {output_filename}");
+		    process::exit(1);
+		}
+		
+	    }
+	    else
+	    {
+		println!("Unable to mmap input file: {input_filename} ");
+		process::exit(1);
+		
+	    }
+	}
+	else
+	{
+	    println!("Can't open input_filename ({input_filename})");
+	    process::exit(1);
+	}
+    }
+}
+
 
 fn main() {
     let mut record_width = 0;
@@ -71,4 +125,6 @@ fn main() {
 		 record_width);
 	process::exit(1);
     }
+
+    BSort2::new(&input_filename, &output_filename, input_length, 100, 10);
 }
