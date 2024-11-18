@@ -45,13 +45,11 @@ impl BSort2 {
 		    println!("Could not create {output_filename}");
 		    process::exit(1);
 		}
-		
 	    }
 	    else
 	    {
 		println!("Unable to mmap input file: {input_filename} ");
 		process::exit(1);
-		
 	    }
 	}
 	else
@@ -60,7 +58,16 @@ impl BSort2 {
 	    process::exit(1);
 	}
     }
+
+
+    fn sort(&self) {
+	// This is where the fun goes.
+    }
+    
+    
 }
+
+
 
 
 fn main() {
@@ -126,5 +133,5 @@ fn main() {
 	process::exit(1);
     }
 
-    BSort2::new(&input_filename, &output_filename, input_length, 100, 10);
+    BSort2::new(&input_filename, &output_filename, input_length, 100, 10).sort();
 }

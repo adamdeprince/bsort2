@@ -1,0 +1,6 @@
+/target
+*~
+gensort-1.5/gensort
+gensort-1.5/rand16.o
+gensort-1.5/sump.o
+gensort-1.5/valsort
