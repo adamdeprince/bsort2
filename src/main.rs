@@ -2,7 +2,6 @@
 extern crate argparse;
 
 use argparse::{ArgumentParser, Store};
-use errno::{Errno, errno, set_errno};
 use memmap::Mmap;
 use memmap::MmapMut;
 use memmap::MmapOptions;
@@ -12,7 +11,6 @@ use std::fs;
 use std::io::SeekFrom;
 use std::io::Write;
 use std::io::prelude::*;
-use std::io;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process;
@@ -24,10 +22,48 @@ pub struct BSort2 {
     record_width: u64,
     index_width: u64
 }
+
+
+struct Histogram {
+    total: u64,
+    slots: [u64;256],
+}
+
+impl Histogram {
+    fn update<'a>(&mut self, items: &mut impl Iterator<Item=&'a u8>) {
+	for item in items {
+	    self.slots[*item as usize] += 1;
+	}
+    }
+	
+
+    fn new() -> Self {
+	Self {
+	    total: 0,
+	    slots: [0; 256],
+	}
+    }
+
+    fn is_ascii(&self) -> bool {
+	for index in 0..31 {
+	    if self.slots[index] != 0 {
+		return false;
+	    }
+	}
+	for index in 128..255 {
+	    if self.slots[index] != 0 {
+		return false;
+	    }
+	}
+	return true;
+    }
+
+}
+
 impl BSort2 {
     
     fn new(input_filename: &str, output_filename: &str, input_file_length: u64, record_width: u64, index_width: u64) -> Self {
-	
+    
 	if let Ok(input_file) = File::open(input_filename) {
 	    if let Ok(input) = unsafe {MmapOptions::new().map(&input_file)}
 	    { 
@@ -59,12 +95,13 @@ impl BSort2 {
 	}
     }
 
-
     fn sort(&self) {
+	let mut histogram =  Histogram::new();
+	
+	// Our initial histogram computation happens solo and on the input data set. 
+	histogram.update(&mut self.input.iter().step_by(self.record_width as usize));
 	// This is where the fun goes.
     }
-    
-    
 }
 
 
